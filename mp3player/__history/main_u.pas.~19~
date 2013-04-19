@@ -1,0 +1,119 @@
+unit main_u;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls,unit2_u,audiofileclass,playerclass,bass, ExtCtrls;
+
+type
+  TForm1 = class(TForm)
+    OpenDialog1: TOpenDialog;
+    Button1: TButton;
+    Label1: TLabel;
+    Memo1: TMemo;
+    btnplaypause: TButton;
+    Button3: TButton;
+    mainScrollBar: TScrollBar;
+    volumeScrollBar: TScrollBar;
+    lbltitel: TLabel;
+    lbltime: TLabel;
+    maintimer: TTimer;
+    procedure Button1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure btnplaypauseClick(Sender: TObject);
+    procedure maintimerTimer(Sender: TObject);
+    procedure mainScrollBarScroll(Sender: TObject; ScrollCode: TScrollCode;
+      var ScrollPos: Integer);
+    procedure volumeScrollBarScroll(Sender: TObject; ScrollCode: TScrollCode;
+      var ScrollPos: Integer);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+  Id3v1Tag: TId3v1Tag;
+Id3v2Tag:TID3v2Tag;
+stream:Tstream;
+globalaudiofile:TAudiofile;
+mpeginfo:Tmpeginfo;
+mempplayer:Tmempplayer;
+implementation
+
+{$R *.dfm}
+
+
+
+
+
+
+
+
+procedure TForm1.btnplaypauseClick(Sender: TObject);
+begin
+
+  case MeMPPlayer.BassStatus of
+    BASS_ACTIVE_STOPPED:
+      begin
+        MeMPPlayer.Play(GlobalAudioFile);
+        LblTitel.Caption := GlobalAudioFile.PlaylistTitel;
+      end;
+    BASS_ACTIVE_PLAYING: MeMPPlayer.Pause;
+    BASS_ACTIVE_PAUSED : MeMPPlayer.Resume;
+  end;
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+
+  if OpenDialog1.Execute then
+  begin
+    GlobalAudioFile.GetAudioInfo(OpenDialog1.FileName);
+    Memo1.Clear;
+    Memo1.Lines.add('Interpret: ' + GlobalAudioFile.Interpret      );
+    Memo1.Lines.add('Titel: '     + GlobalAudioFile.Titel          );
+    Memo1.Lines.add('Pfad: '      + GlobalAudioFile.Pfad           );
+    Memo1.Lines.add('Dauer: '     + IntToStr(GlobalAudioFile.Dauer));
+  end;
+end;
+
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+Id3v1Tag := TId3v1Tag.Create;
+  Id3v2Tag := TId3v2Tag.Create;
+  mpegInfo := TMpegInfo.Create;
+  globalaudiofile:=TAudiofile.create;
+   GlobalAudioFile := TAudioFile.Create;
+  MeMPPlayer := TMeMPPlayer .Create;
+  MeMPPlayer.InitBassEngine(Handle);
+  MeMPPlayer.Volume := 100;
+end;
+
+procedure TForm1.mainScrollBarScroll(Sender: TObject; ScrollCode: TScrollCode;
+  var ScrollPos: Integer);
+begin
+     MeMPPlayer.Progress := ScrollPos / 100;
+end;
+
+procedure TForm1.maintimerTimer(Sender: TObject);
+var t: integer;
+begin
+  MainScrollbar.Position := Round(MeMPPlayer.Progress * 100);
+  t := Round(MeMPPlayer.Time);
+  LblTime.Caption := Format('%.2d:%.2d',[t Div 60, t Mod 60])
+end;
+
+
+
+
+procedure TForm1.volumeScrollBarScroll(Sender: TObject; ScrollCode: TScrollCode;
+  var ScrollPos: Integer);
+begin
+MeMPPlayer.Volume := ScrollPos / 100;
+end;
+
+end.

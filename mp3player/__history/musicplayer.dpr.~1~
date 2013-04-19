@@ -1,0 +1,16 @@
+program musicplayer;
+
+uses
+  Forms,
+  main_u in 'main_u.pas' {Form1},
+  unit2_u in 'unit2_u.pas',
+  id3v2_u in 'id3v2_u.pas';
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TForm1, Form1);
+  Application.Run;
+end.

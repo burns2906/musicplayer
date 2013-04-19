@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2008.11.23 17:43:55.706.pas,C:\Dokumente und Einstellungen\musikpc\Eigene Dateien\RAD Studio\Projects\mp3player\Unit1.pas=C:\Dokumente und Einstellungen\musikpc\Eigene Dateien\RAD Studio\Projects\mp3player\playerclass.pas</Transaction>
+    <Transaction>2008.11.23 17:47:00.346.pas,C:\Dokumente und Einstellungen\musikpc\Eigene Dateien\RAD Studio\Projects\mp3player\Unit1.pas=C:\Dokumente und Einstellungen\musikpc\Eigene Dateien\RAD Studio\Projects\mp3player\audiofileclass.pas</Transaction>
+  </Transactions>
+</BorlandProject>

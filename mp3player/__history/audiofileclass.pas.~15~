@@ -1,0 +1,100 @@
+unit audiofileclass;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls,unit2_u;
+type
+TAudioFile = class
+  private
+    fInterpret: String;
+    fTitel    : String;
+    fPfad     : String;
+    fDauer    : Integer;
+    // ...
+    procedure GetMp3Info;
+    procedure assign;
+    //procedure GetWmaInfo;
+   // procedure SetUnknown;
+    function GetPlaylistTitel: String;
+  public
+    property Interpret: String  read fInterpret  write fInterpret;
+    property Titel    : String  read fTitel      write fTitel    ;
+    property Pfad     : String  read fPfad       write fPfad     ;
+    property Dauer    : Integer read fDauer      write fDauer    ;
+    property PlaylistTitel: String read GetPlaylistTitel         ;
+ 
+    procedure GetAudioInfo(filename: String);
+end;
+
+implementation
+
+  procedure TAudioFile.GetAudioInfo(filename: String);
+begin
+  fPfad := filename;
+  if (AnsiLowerCase(ExtractFileExt(filename)) = '.mp3') then
+    GetMp3Info
+  else
+    if AnsiLowerCase(ExtractFileExt(filename)) = '.wma' then
+      //GetWMAInfo
+    else
+     // SetUnknown;
+end;
+
+procedure TAudioFile.GetMp3Info;
+var mpegInfo: TMpegInfo;
+    ID3v2Tag: TID3V2Tag;
+    ID3v1tag: TID3v1Tag;
+    Stream: TFileStream;
+begin
+  // Daten mit MP3FileUtils auslesen
+  mpeginfo:=TMpegInfo.Create;
+  ID3v2Tag:=TID3V2Tag.Create;
+  ID3v1tag:=TID3v1Tag.Create;
+  stream := TFileStream.Create(fPfad, fmOpenRead or fmShareDenyWrite);
+  id3v1tag.ReadFromStream(stream);
+  stream.Seek(0, sobeginning);
+  id3v2tag.ReadFromStream(stream);
+  if Not id3v2Tag.exists then
+    stream.Seek(0, sobeginning)
+  else
+    stream.Seek(id3v2tag.size, soFromBeginning);
+  mpeginfo.LoadFromStream(Stream);
+  stream.free;
+ 
+  // Daten auf unser Geruest uebertragen
+  if mpeginfo.FirstHeaderPosition >- 1 then
+  begin
+    if id3v2tag.artist <> '' then
+      fInterpret := id3v2tag.artist
+    else
+      fInterpret := id3v1tag.artist;
+    if id3v2tag.title <> '' then
+      fTitel := id3v2tag.title
+    else
+      if id3v1tag.title <> '' then
+        fTitel := id3v1tag.title
+      else
+        fTitel := ExtractFileName(fPfad);
+    fDauer   := mpeginfo.dauer;
+  end else
+    //SetUnknown;
+  MpegInfo.Free;
+  Id3v2Tag.Free;
+  Id3v1Tag.Free;
+end;
+
+  function TAudioFile.GetPlaylistTitel: String;
+begin
+  if Trim(fInterpret) = '' then
+    result := fTitel
+  else
+    result := fInterpret + ' - ' + fTitel;
+end;
+
+ procedure TAudiofile.assign(aaudiofile:Taudiofile);
+  begin
+
+  end;
+end.

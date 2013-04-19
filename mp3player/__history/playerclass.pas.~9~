@@ -1,0 +1,138 @@
+unit playerclass;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls,audiofileclass,bass;
+
+type
+TMeMPPlayer = class
+  private
+    fMainStream: DWord;
+    fMainVolume: single;
+    fMainAudioFile: TAudioFile;
+
+    procedure SetPosition(Value: Longword);
+    function MeMP_CreateStream(aFilename: String): DWord;
+    procedure SetVolume(Value: single);
+    function GetTime: Double;
+    function GetProgress: Double;
+    procedure SetProgress(Value: Double);
+    function GetBassStatus: DWord;
+  public
+    property Volume:     single read fMainVolume write SetVolume;
+    property Time:       Double read GetTime;
+    property Progress:   Double read GetProgress write SetProgress;
+    property BassStatus: DWord  read GetBassStatus;
+
+    constructor Create;
+    destructor Destroy; override;
+    procedure InitBassEngine(HND: HWND);
+    procedure Play(aAudioFile: TAudioFile);
+    procedure Pause;
+    procedure Stop;
+    procedure Resume;
+    procedure StopAndFree;
+end; 
+
+
+implementation
+
+procedure TMeMPPlayer.InitBassEngine(HND: HWND);
+begin
+  if (HIWORD(BASS_GetVersion) <> BASSVERSION) then
+    MessageDLG('Bass 2.4 nicht gefunden', mtError, [MBOK], 0);
+  BASS_Init(-1, 44100, 0, HND, nil);
+end;
+
+procedure TMeMPPlayer.Play(aAudioFile: TAudioFile);
+begin
+  if aAudioFile <> NIL then
+  begin
+    fMainAudioFile.Assign(aAudioFile);
+    StopAndFree;
+    fMainstream := MeMP_CreateStream(fMainAudioFile.Pfad);
+    BASS_ChannelSetAttribute(fMainStream, BASS_ATTRIB_VOL, fMainVolume);
+    BASS_ChannelPlay(fMainStream , True);
+  end;
+end;
+
+procedure TMeMPPlayer.StopAndFree;
+begin
+  BASS_ChannelStop(fMainStream);
+  BASS_StreamFree(fMainStream);
+  fMainStream := 0;
+end;
+
+function TMeMPPlayer.MeMP_CreateStream(aFilename: String): DWord;
+var flags: DWORD;
+begin
+  if (AnsiLowerCase(ExtractFileExt(aFilename)) = '.mp3') then
+    flags := BASS_STREAM_PRESCAN
+  else
+    flags := 0;
+  result := BASS_StreamCreateFile(False, PChar(aFilename), 0, 0, flags);
+end;
+
+procedure TMeMPPlayer.Pause;
+begin
+  BASS_ChannelPause(fMainStream);
+end;
+ 
+procedure TMeMPPlayer.Stop;
+begin
+  BASS_ChannelStop(fMainStream);
+end;
+ 
+procedure TMeMPPlayer.Resume;
+begin
+  BASS_ChannelPlay(fMainStream, False);
+end;
+
+procedure TMeMPPlayer.SetVolume(Value: single);
+begin
+  if Value < 0 then Value := 0;
+  if Value > 1 then Value := 1;
+  fMainVolume := Value;
+  BASS_ChannelSetAttribute(fMainStream, BASS_ATTRIB_VOL, fMainVolume);
+end;
+ 
+function TMeMPPlayer.GetTime: Double;
+begin
+  if (fMainStream <> 0) then
+    result := BASS_ChannelBytes2Seconds(fMainStream,
+                    BASS_ChannelGetPosition(fMainStream, BASS_POS_BYTE))
+  else
+    result := 0;
+end;
+ 
+function TMeMPPlayer.GetProgress: Double;
+begin
+  if (fMainStream <> 0) then
+    result := BASS_ChannelGetPosition(fMainStream, BASS_POS_BYTE) /
+                    BASS_ChannelGetLength(fMainStream, BASS_POS_BYTE)
+  else
+    result := 0;
+end;
+ 
+procedure TMeMPPlayer.SetPosition(Value: Longword);
+begin
+  BASS_ChannelSetPosition(fMainStream, Value, BASS_POS_BYTE);
+end;
+ 
+procedure TMeMPPlayer.SetProgress(Value: Double);
+begin
+  if Value < 0 then Value := 0;
+  if Value > 1 then Value := 1;
+  BASS_ChannelSetPosition(fMainStream,
+        Round(BASS_ChannelGetLength(fMainStream, BASS_POS_BYTE) * Value));
+end;
+
+function TMeMPPlayer.GetBassStatus: DWord;
+begin
+  result := BASS_ChannelIsActive(fMainStream);
+end;
+
+
+end.
